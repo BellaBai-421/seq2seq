@@ -48,7 +48,9 @@ class DecoderRNN(BaseRNN):
         out, hidden = self.rnn(emb, hidden) # out: [1,B,H] or [B,1,H]
 
         # Take the output at the only time step(because we inputted a single token)
-        out_step = out.squeeze(1) if self.batch_first else out.squeeze(0) # [B, H]
+        # 如果 batch_size 恰好为 1，会导致错误的维度被挤压掉，引发计算崩溃
+        # out_step = out.squeeze(1) if self.batch_first else out.squeeze(0) # [B, H]
+        out_step = out.select(1, 0) if self.batch_first else out.select(0, 0)
 
         # Projection hidden to vocab size
         logits = self.out_proj(out_step) # [B, V]
